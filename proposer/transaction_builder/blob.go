@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/sha256"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 
 	"github.com/ethereum-optimism/optimism/op-service/eth"
@@ -84,6 +85,9 @@ func (b *BlobTransactionBuilder) Build(
 		return nil, err
 	}
 
+	storeFee := new(big.Int)
+	b.rpc.TaikoL1.GetConfig(&bind.CallOpts{Context: ctx})
+
 	// If the current proposer wants to include the parent meta hash, then fetch it from the protocol.
 	var parentMetaHash = [32]byte{}
 	if includeParentMetaHash {
@@ -137,6 +141,6 @@ func (b *BlobTransactionBuilder) Build(
 		Blobs:    []*eth.Blob{blob},
 		To:       &b.taikoL1Address,
 		GasLimit: b.gasLimit,
-		Value:    maxFee,
+		Value:    new(big.Int).Add(maxFee, storeFee),
 	}, nil
 }
